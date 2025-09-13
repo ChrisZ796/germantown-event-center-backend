@@ -1,0 +1,54 @@
+[{
+"id": 101,
+"username": "matheus_dev",
+"email": "matheus.dev@example.com",
+"firstname": "Matheus",
+"lastname": "Oliveira",
+"profilePicture": "https://example.com/images/users/101.jpg",
+"bio": "Full-stack developer. Coffee lover ☕. Always learning.",
+"location": {
+"city": "Blumenau",
+"state": "Santa Catarina",
+"country": "Brazil"
+},
+"preferences": {
+"language": "pt-BR",
+"theme": "dark",
+"notifications": true
+},
+"accountStatus": "active",
+"createdAt": "2023-08-15T10:30:00Z",
+"lastLogin": "2025-08-30T09:45:00Z",
+"roles": ["user", "admin"],
+"socialLinks": {
+"github": "https://github.com/matheusdev",
+"linkedin": "https://linkedin.com/in/matheusdev"},
+"volunteerHours": 5,
+"eventsAttended": 2
+},
+{
+"id": 102,
+"username": "matheus_dev",
+"email": "matheus.dev@example.com",
+"fullName": "Matheus Oliveira",
+"profilePicture": "https://example.com/images/users/101.jpg",
+"bio": "Full-stack developer. Coffee lover ☕. Always learning.",
+"location": {
+"city": "Blumenau",
+"state": "Santa Catarina",
+"country": "Brazil"
+},
+"preferences": {
+"language": "pt-BR",
+"theme": "dark",
+"notifications": true
+},
+"accountStatus": "active",
+"createdAt": "2023-08-15T10:30:00Z",
+"lastLogin": "2025-08-30T09:45:00Z",
+"roles": ["user", "admin"],
+"socialLinks": {
+"github": "https://github.com/matheusdev",
+"linkedin": "https://linkedin.com/in/matheusdev"}
+}
+]

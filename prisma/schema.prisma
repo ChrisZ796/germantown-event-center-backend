@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userID         Int     @id @default(autoincrement())
+  username       String  @unique
+  pswd           String
+  firstname      String
+  lastname       String
+  school         String?
+  email          String  @unique
+  volunteerHours Int     @default(0)
+  eventsAttended Int     @default(0)
+  favoriteOrgs   Json
+  pfpPath        String?
+  Post           Post?   @relation(fields: [postPostID], references: [postID])
+  postPostID     Int?
+}
+
+model Organization {
+  orgID       Int     @id @default(autoincrement())
+  orgName     String
+  pswd        String
+  email       String  @unique
+  phoneNumber String?
+  address     String?
+  website     String?
+  linkedin    String?
+  pfpPath     String?
+  Post        Post[]
+}
+
+model Post {
+  postID           Int          @id @default(autoincrement())
+  org              Organization @relation(fields: [postID], references: [orgID])
+  eventDate        DateTime
+  title            String
+  description      String
+  postDate         DateTime     @default(now())
+  eventLocation    String
+  numberInterested Int          @default(0)
+  thumbnailPath    String?
+  finished         Boolean      @default(false)
+  registeredUsers  User[]
+}
