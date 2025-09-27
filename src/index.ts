@@ -352,7 +352,7 @@ app.get('/posts', async (req, res) => {
   }
 })
 
-// View Event Details
+// View Post Information
 app.get('/posts/:id', async (req, res) => {
   const { id } = req.params
 
@@ -515,35 +515,31 @@ app.patch('/posts/organizations/finish/:id', async (req, res) => {
 app.patch('/posts/users/:id', async (req, res) => {
   const { id } = req.params
   const { userID } = req.body
+
   try {
-    const post = await prisma.post.update({
-      where: { postID: Number(id) },
-      data: { 
-        registeredUsers: {
-          connect: [{ userID: userID }]
-        },
-        numberInterested: {
-          increment: 1
-        }
+    // Step 1: create the registration
+    await prisma.userRegistrations.create({
+      data: {
+        userID: Number(userID),
+        postID: Number(id),
       }
     })
-    if (post) {
-      res.status(200).json({
-        message: 'User registered successfully',
-        post: post
-      })
-    }
-    else {
-      res.status(204).json({
-        message: 'Post not found'
-      })
-    }
-  }
-  catch (error) {
+
+    // Step 2: increment numberInterested on the post
+    const post = await prisma.post.update({
+      where: { postID: Number(id) },
+      data: { numberInterested: { increment: 1 } }
+    })
+
+    res.status(200).json({
+      message: 'User registered successfully',
+      post
+    })
+  } catch (error) {
     res.status(500).json({
       message: "Unable to register user",
       error: error.message
-  })
+    })
   }
 })
 
@@ -551,43 +547,46 @@ app.patch('/posts/users/:id', async (req, res) => {
 app.patch('/users/favorites/:id', async (req, res) => {
   const { id } = req.params
   const { orgID } = req.body
-  
+
   try {
-    const user = await prisma.user.findUnique({
-      where: { userID: Number(id) },
-      include: { favoriteOrgs: {select: {orgID: true} } }
+    // Check if already favorited
+    const existing = await prisma.userFavorites.findUnique({
+      where: {
+        userID_orgID: {
+          userID: Number(id),
+          orgID: Number(orgID)
+        }
+      }
     })
-    const favorites = user.favoriteOrgs.some(
-      (org) => org.orgID === Number(orgID)
-    )
-    await prisma.user.update({
-      where: { userID: Number (id) },
-      data: { 
-        favoriteOrgs: favorites
-        ? { disconnect: [{ orgID: orgID }] }
-        : { connect: [{ orgID: orgID }] } }
-    })
-    if (user && favorites) {
-      res.status(200).json({
-        message: 'Removed organization from favorites',
-        user: user
+
+    let actionMessage
+
+    if (existing) {
+      // Remove favorite
+      await prisma.userFavorites.delete({
+        where: {
+          userID_orgID: {
+            userID: Number(id),
+            orgID: Number(orgID)
+          }
+        }
       })
-    }
-    else if (user) {
-      res.status(200).json({
-        message: 'Added organization to favorites',
-        user: user
+      actionMessage = 'Removed organization from favorites'
+    } else {
+      // Add favorite
+      await prisma.userFavorites.create({
+        data: {
+          userID: Number(id),
+          orgID: Number(orgID)
+        }
       })
+      actionMessage = 'Added organization to favorites'
     }
-    else {
-      res.status(204).json({
-        message: 'Failed to find user or organization'
-      })
-    }
-  }
-  catch (error) {
+
+    res.status(200).json({ message: actionMessage })
+  } catch (error) {
     res.status(500).json({
-      message: "Unable to add to favorites",
+      message: "Unable to update favorites",
       error: error.message
     })
   }

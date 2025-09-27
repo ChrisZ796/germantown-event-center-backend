@@ -26,29 +26,28 @@ model User {
   eventsAttended Int     @default(0)
   pfpPath        String?
 
-  favoriteOrgs Organization[] @relation("userFavorites")
-
-  registeredPosts Post[] @relation("userRegistrations")
+  favoriteOrgs    UserFavorites[]
+  registeredPosts UserRegistrations[]
 }
 
 model Organization {
-  orgID       Int     @id @default(autoincrement())
-  orgName     String
-  pswd        String
-  email       String  @unique
+  orgID   Int    @id @default(autoincrement())
+  orgName String
+  pswd    String
+  email   String  @unique
   phoneNumber String?
   address     String?
   website     String?
   linkedin    String?
   pfpPath     String?
-  Post        Post[]
 
-  usersWhoFavorited User[] @relation("userFavorites")
+  Post Post[]
+  favoritedBy UserFavorites[]
 }
 
 model Post {
   postID           Int          @id @default(autoincrement())
-  orgID            Int          @default(1)
+  orgID            Int
   org              Organization @relation(fields: [orgID], references: [orgID])
   eventDate        DateTime
   title            String
@@ -61,5 +60,26 @@ model Post {
   finished         Boolean      @default(false)
   updates          String       @default("")
 
-  registeredUsers User[] @relation("userRegistrations")
+  registrations UserRegistrations[]
 }
+
+model UserFavorites {
+  userID Int
+  orgID  Int
+
+  user User         @relation(fields: [userID], references: [userID])
+  org  Organization @relation(fields: [orgID], references: [orgID])
+
+  @@id([userID, orgID]) // ✅ composite primary key
+}
+
+model UserRegistrations {
+  userID Int
+  postID Int
+
+  user User @relation(fields: [userID], references: [userID])
+  post Post @relation(fields: [postID], references: [postID])
+
+  @@id([userID, postID]) // ✅ composite primary key
+}
+
