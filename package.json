@@ -12,6 +12,7 @@
   },
   "scripts": {
     "startdev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
-    "migrate": "npx prisma migrate deploy"
+    "migrate": "npx prisma migrate deploy",
+    "reset": "npx prisma migrate reset"
   }
 }
