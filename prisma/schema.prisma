@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  //output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -24,10 +24,11 @@ model User {
   email          String  @unique
   volunteerHours Int     @default(0)
   eventsAttended Int     @default(0)
-  favoriteOrgs   Json
   pfpPath        String?
-  Post           Post?   @relation(fields: [postPostID], references: [postID])
-  postPostID     Int?
+
+  favoriteOrgs Organization[] @relation("userFavorites")
+
+  registeredPosts Post[] @relation("userRegistrations")
 }
 
 model Organization {
@@ -41,18 +42,24 @@ model Organization {
   linkedin    String?
   pfpPath     String?
   Post        Post[]
+
+  usersWhoFavorited User[] @relation("userFavorites")
 }
 
 model Post {
   postID           Int          @id @default(autoincrement())
-  org              Organization @relation(fields: [postID], references: [orgID])
+  orgID            Int          @default(1)
+  org              Organization @relation(fields: [orgID], references: [orgID])
   eventDate        DateTime
   title            String
   description      String
+  hours            Float        @default(0)
   postDate         DateTime     @default(now())
   eventLocation    String
   numberInterested Int          @default(0)
   thumbnailPath    String?
   finished         Boolean      @default(false)
-  registeredUsers  User[]
+  updates          String       @default("")
+
+  registeredUsers User[] @relation("userRegistrations")
 }

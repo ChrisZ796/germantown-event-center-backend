@@ -1,3 +1,4 @@
+/*
 const express = require('express')
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
@@ -5,6 +6,14 @@ const data = require('../data.json')
 const posts = require('../post.json')
 const app = express()
 const port = 8080
+*/
+import express from 'express'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+const app = express()
+const port = 8080
+
 
 app.use(express.json())
 
@@ -20,16 +29,13 @@ app.post('/users', async (req, res) => {
         lastname: lastname,
         email: email,
         volunteerHours: 0,
-        eventsAttended: 0,
-        favoriteOrgs: {
-          orgs: [
-          ]
-        }
+        eventsAttended: 0
       }
     })
     res.status(201).json({
     message: 'User created successfully',
-  })
+    })
+  
   } catch (error) {
     res.status(500).json({
       message: 'Unable to create user',
@@ -71,7 +77,10 @@ app.get('/users/:id', async (req, res) => {
   const { id } = req.params
   try {
     const user = await prisma.user.findUnique({
-      where: { userID: Number(id) }
+      where: { userID: Number(id) },
+      include: {
+        favoriteOrgs: true
+      }
     })
     if (user) {
       res.status(200).json(user)
@@ -109,6 +118,27 @@ app.get('/organizations/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to retrieve organization",
+      error: error.message
+    })
+  }
+})
+
+// Get a list of organizations
+app.get('/organizations', async (req, res) => {
+  try {
+    const orgs = await prisma.organization.findMany()
+    if (orgs) {
+      res.status(200).json(orgs)
+    }
+    else {
+      res.status(204).json({
+        message: 'Organizations not found'
+      })
+  }
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to retrieve organizations",
       error: error.message
     })
   }
@@ -198,8 +228,6 @@ app.patch('/organizations/:id/info', async (req, res) => {
   })
   }
 })
-
-// Update user stats
 
 // Search for users
 app.get('/users/search', async (req, res) => {
@@ -324,10 +352,36 @@ app.get('/posts', async (req, res) => {
   }
 })
 
+// View Event Details
+app.get('/posts/:id', async (req, res) => {
+  const { id } = req.params
+
+  try {
+    const post = await prisma.post.findUnique({
+      where: {postID: Number(id)}
+    })
+    if (!post) {
+      res.status(204).json({
+        message: 'Post not found'
+      })
+    }
+    else {
+      res.status(200).json({
+        post: post
+      })
+    }
+  }
+  catch (error) {
+    res.status(500).json({
+      message: 'Error retrieving post',
+      error: error.message
+    })
+  }
+})
+
 // Create post
-app.post('/posts/query', async (req, res) => {
-  const { title, description, eventDate, eventLocation } = req.body
-  const orgID = Number(req.query.id)
+app.post('/posts', async (req, res) => {
+  const { title, description, eventDate, eventLocation, hours, orgID } = req.body
   try {
     const post = await prisma.post.create({
       data: {
@@ -335,6 +389,7 @@ app.post('/posts/query', async (req, res) => {
         description: description,
         eventDate: eventDate,
         eventLocation: eventLocation,
+        hours: hours,
         org: {
           connect: { orgID: orgID }
         }
@@ -380,9 +435,9 @@ app.delete('/posts/:id', async (req, res) => {
 })
 
 // Update post
-app.patch('/posts/:id', async (req, res) => {
+app.patch('/posts/organizations/:id', async (req, res) => {
   const { id } = req.params
-  const { title, description, eventDate, eventLocation } = req.body
+  const { title, description, eventDate, eventLocation, hours } = req.body
   try {
     const post = await prisma.post.update({
       where: { postID: Number(id) },
@@ -390,7 +445,8 @@ app.patch('/posts/:id', async (req, res) => {
         title: title,
         description: description,
         eventDate: eventDate,
-        eventLocation: eventLocation
+        eventLocation: eventLocation,
+        hours: hours
       }
     })
     if (post) {
@@ -413,15 +469,129 @@ app.patch('/posts/:id', async (req, res) => {
   }
 })
 
+// Finish Post
+app.patch('/posts/organizations/finish/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const post = await prisma.post.update({
+      where: { postID: Number(id) },
+      data: { 
+        finished: true
+      }
+    })
+    const users = await prisma.user.findMany({
+      where: { registeredPosts: {
+        some: { postID: Number(id) }
+      }}
+    })
+    await prisma.$transaction(
+      users.map(user => prisma.user.update({
+        where: {userID: user.userID },
+        data: { volunteerHours: { increment: post.hours },  eventsAttended: { increment: 1 }}
+      }))
+    )
+    if (post) {
+      res.status(200).json({
+        message: 'Post closed successfully',
+        post: post,
+        users
+      })
+    }
+    else {
+      res.status(204).json({
+        message: 'Post not found'
+      })
+    }
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to close post",
+      error: error.message
+  })
+  }
+})
+
 // Register for event
+app.patch('/posts/users/:id', async (req, res) => {
+  const { id } = req.params
+  const { userID } = req.body
+  try {
+    const post = await prisma.post.update({
+      where: { postID: Number(id) },
+      data: { 
+        registeredUsers: {
+          connect: [{ userID: userID }]
+        },
+        numberInterested: {
+          increment: 1
+        }
+      }
+    })
+    if (post) {
+      res.status(200).json({
+        message: 'User registered successfully',
+        post: post
+      })
+    }
+    else {
+      res.status(204).json({
+        message: 'Post not found'
+      })
+    }
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to register user",
+      error: error.message
+  })
+  }
+})
 
-// Adding a favorite organization to a user
-
-// Removing a favorite organization from a user
-
-// Mark event as finished
-
-
+// Adding/Removing a favorite organization to a user
+app.patch('/users/favorites/:id', async (req, res) => {
+  const { id } = req.params
+  const { orgID } = req.body
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { userID: Number(id) },
+      include: { favoriteOrgs: {select: {orgID: true} } }
+    })
+    const favorites = user.favoriteOrgs.some(
+      (org) => org.orgID === Number(orgID)
+    )
+    await prisma.user.update({
+      where: { userID: Number (id) },
+      data: { 
+        favoriteOrgs: favorites
+        ? { disconnect: [{ orgID: orgID }] }
+        : { connect: [{ orgID: orgID }] } }
+    })
+    if (user && favorites) {
+      res.status(200).json({
+        message: 'Removed organization from favorites',
+        user: user
+      })
+    }
+    else if (user) {
+      res.status(200).json({
+        message: 'Added organization to favorites',
+        user: user
+      })
+    }
+    else {
+      res.status(204).json({
+        message: 'Failed to find user or organization'
+      })
+    }
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to add to favorites",
+      error: error.message
+    })
+  }
+})
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)

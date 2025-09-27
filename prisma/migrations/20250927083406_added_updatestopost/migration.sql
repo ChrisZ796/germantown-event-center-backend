@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `post` ADD COLUMN `updates` VARCHAR(191) NOT NULL DEFAULT '';
