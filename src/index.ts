@@ -473,33 +473,44 @@ app.patch('/posts/organizations/:id', async (req, res) => {
 app.patch('/posts/organizations/finish/:id', async (req, res) => {
   const { id } = req.params
   try {
-    const post = await prisma.post.update({
-      where: { postID: Number(id) },
-      data: { 
-        finished: true
-      }
+    const closed = await prisma.post.findUnique({
+      where: { postID: Number(id) }
     })
-    const users = await prisma.user.findMany({
-      where: { registeredPosts: {
-        some: { postID: Number(id) }
-      }}
-    })
-    await prisma.$transaction(
-      users.map(user => prisma.user.update({
-        where: {userID: user.userID },
-        data: { volunteerHours: { increment: post.hours },  eventsAttended: { increment: 1 }}
-      }))
-    )
-    if (post) {
-      res.status(200).json({
-        message: 'Post closed successfully',
-        post: post,
-        users
+    if(!closed.finished)
+    {
+      const post = await prisma.post.update({
+        where: { postID: Number(id) },
+        data: { 
+          finished: true
+        }
       })
+      const users = await prisma.userRegistrations.findMany({
+        where: {
+          postID: Number(id)
+        }
+      })
+      await prisma.$transaction(
+        users.map(user => prisma.user.update({
+          where: {userID: user.userID },
+          data: { volunteerHours: { increment: post.hours },  eventsAttended: { increment: 1 }}
+        }))
+      )
+      if (post) {
+        res.status(200).json({
+          message: 'Post closed successfully',
+          post: post,
+          users
+        })
+      }
+      else {
+        res.status(204).json({
+          message: 'Post not found'
+        })
+      }
     }
     else {
-      res.status(204).json({
-        message: 'Post not found'
+      res.status(200).json({
+        message: 'Post is already closed'
       })
     }
   }
@@ -511,31 +522,62 @@ app.patch('/posts/organizations/finish/:id', async (req, res) => {
   }
 })
 
-// Register for event
+// Register / Unregister for event
 app.patch('/posts/users/:id', async (req, res) => {
   const { id } = req.params
   const { userID } = req.body
 
   try {
-    // Step 1: create the registration
-    await prisma.userRegistrations.create({
-      data: {
-        userID: Number(userID),
-        postID: Number(id),
+    const existing = await prisma.userRegistrations.findUnique({
+      where: {
+        userID_postID: {
+          postID: Number(id),
+          userID: Number(userID)
+        }
       }
     })
 
-    // Step 2: increment numberInterested on the post
-    const post = await prisma.post.update({
-      where: { postID: Number(id) },
-      data: { numberInterested: { increment: 1 } }
-    })
+    if (existing) {
+      await prisma.userRegistrations.delete({
+        where: {
+          userID_postID: {
+            postID: Number(id),
+            userID: Number(userID)
+          }
+        }
+      })
+      
+      const post = await prisma.post.update({
+        where: { postID: Number(id) },
+        data: { numberInterested: { decrement: 1} }
+      })
+      
+      res.status(200).json({
+        message: 'User unregistered successfully',
+        post
+      })
+    }
+    else {
+      await prisma.userRegistrations.create({
+        data: {
+          userID: Number(userID),
+          postID: Number(id),
+        }
+      })
+      
+      const post = await prisma.post.update({
+        where: { postID: Number(id) },
+        data: { numberInterested: { increment: 1 } }
+      })
 
-    res.status(200).json({
-      message: 'User registered successfully',
-      post
-    })
-  } catch (error) {
+      res.status(200).json({
+        message: 'User registered successfully',
+        post
+      })
+    }
+
+  } 
+  catch (error) {
     res.status(500).json({
       message: "Unable to register user",
       error: error.message
