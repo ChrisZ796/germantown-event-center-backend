@@ -72,6 +72,54 @@ app.post('/organizations', async (req, res) => {
   }
 })
 
+// Search for users
+app.get('/users/search', async (req, res) => {
+  const { query } = req.query;
+  try {
+    const userResults = await prisma.user.findMany({
+      where: { 
+        firstname: { contains: query as string }
+      }
+    })
+
+    res.status(200).json({
+      message: { userResults }
+    })
+    if (!userResults) {
+      res.status(204).json({
+        message: 'No users found'
+      })
+    }
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to search users",
+      error: error.message
+    })
+  }
+})
+
+// Search for organizations
+app.get('/organizations/search', async (req, res) => {
+  const { query } = req.query;
+  try {
+    const orgResults = await prisma.organization.findMany({
+      where: { 
+        orgName: { contains: query as string} 
+    }
+    })
+    res.status(200).json({
+      message: { orgResults }
+    })
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to search organizations",
+      error: error.message
+  })
+  }
+})
+
 // Get user info
 app.get('/users/:id', async (req, res) => {
   const { id } = req.params
@@ -224,54 +272,6 @@ app.patch('/organizations/:id/info', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to find organization",
-      error: error.message
-  })
-  }
-})
-
-// Search for users
-app.get('/users/search', async (req, res) => {
-  const { query } = req.query;
-  try {
-    const userResults = await prisma.user.findMany({
-      where: { 
-        firstname: { contains: query as string }
-      }
-    })
-
-    res.status(200).json({
-      message: { userResults }
-    })
-    if (!userResults) {
-      res.status(204).json({
-        message: 'No users found'
-      })
-    }
-  }
-  catch (error) {
-    res.status(500).json({
-      message: "Unable to search users",
-      error: error.message
-    })
-  }
-})
-
-// Search for organizations
-app.get('/organizations/search', async (req, res) => {
-  const { query } = req.query;
-  try {
-    const orgResults = await prisma.organization.findMany({
-      where: { 
-        orgName: { contains: query as string} 
-    }
-    })
-    res.status(200).json({
-      message: { orgResults }
-    })
-  }
-  catch (error) {
-    res.status(500).json({
-      message: "Unable to search organizations",
       error: error.message
   })
   }
