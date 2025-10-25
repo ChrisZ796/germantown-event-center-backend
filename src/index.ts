@@ -1,14 +1,6 @@
-/*
-const express = require('express')
-import { PrismaClient } from '@prisma/client'
-const prisma = new PrismaClient()
-const data = require('../data.json')
-const posts = require('../post.json')
-const app = express()
-const port = 8080
-*/
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
+import cors from 'cors'
 
 const prisma = new PrismaClient()
 const app = express()
@@ -16,6 +8,7 @@ const port = 8080
 
 
 app.use(express.json())
+app.use(cors())
 
 // Create a new user
 app.post('/users', async (req, res) => {
@@ -629,6 +622,33 @@ app.patch('/users/favorites/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Unable to update favorites",
+      error: error.message
+    })
+  }
+})
+
+app.post('/users/login', async (req, res) => {
+  const {username, password} = req.body;
+  try {
+    const user = await prisma.user.findUnique({
+      where:{
+        username: username
+      }
+    })
+    if(password === user.pswd) {
+      res.status(200).json({
+        message: "Login accepted"
+      })
+    }
+    else {
+      res.status(401).json({
+        message: "Incorrect password"
+      })
+    }
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to authenticate, try again",
       error: error.message
     })
   }
