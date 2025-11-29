@@ -59,6 +59,7 @@ model Post {
   thumbnailPath    String?
   finished         Boolean      @default(false)
   updates          String       @default("")
+  volunteersNeeded Int          @default(0)
 
   registrations UserRegistrations[]
 }
@@ -70,7 +71,7 @@ model UserFavorites {
   user User         @relation(fields: [userID], references: [userID])
   org  Organization @relation(fields: [orgID], references: [orgID])
 
-  @@id([userID, orgID]) // ✅ composite primary key
+  @@id([userID, orgID])
 }
 
 model UserRegistrations {
@@ -80,6 +81,6 @@ model UserRegistrations {
   user User @relation(fields: [userID], references: [userID])
   post Post @relation(fields: [postID], references: [postID])
 
-  @@id([userID, postID]) // ✅ composite primary key
+  @@id([userID, postID])
 }
 

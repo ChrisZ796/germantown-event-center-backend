@@ -654,6 +654,29 @@ app.post('/users/login', async (req, res) => {
   }
 })
 
+// Get list of users registered for a post
+app.get('/posts/:id/users', async (req, res) => {
+  const { id } = req.params
+  try {
+    const post = await prisma.post.findUnique({
+      where: { postID: Number(id) },
+      include: {
+        registrations: true
+      }
+    })
+    res.status(200).json({
+      message: 'Registrations retrieved successfully',
+      registrations: post.registrations
+    })
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to retrieve registrations",
+      error: error.message
+    })
+  }
+})
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
