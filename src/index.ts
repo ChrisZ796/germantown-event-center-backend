@@ -1,8 +1,7 @@
 import express from 'express'
-import { PrismaClient } from '@prisma/client'
 import cors from 'cors'
+import { prisma } from '../prisma/lib/prisma'
 
-const prisma = new PrismaClient()
 const app = express()
 const port = 8080
 
@@ -32,7 +31,7 @@ app.post('/users', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: 'Unable to create user',
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 
@@ -60,7 +59,7 @@ app.post('/organizations', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: 'Unable to create organization',
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -87,7 +86,7 @@ app.get('/users/search', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to search users",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -108,7 +107,7 @@ app.get('/organizations/search', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to search organizations",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
   })
   }
 })
@@ -135,7 +134,7 @@ app.get('/users/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to retrieve user",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -159,7 +158,7 @@ app.get('/organizations/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to retrieve organization",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -180,7 +179,7 @@ app.get('/organizations', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to retrieve organizations",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -220,7 +219,7 @@ app.patch('/users/:id/info', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to find user",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
   })
   }
 })
@@ -265,7 +264,7 @@ app.patch('/organizations/:id/info', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to find organization",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
   })
   }
 })
@@ -291,7 +290,7 @@ app.delete('/users/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to delete user",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
   })
   }
 })
@@ -317,7 +316,7 @@ app.delete('/organizations/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to delete organization",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
    })
   }
 })
@@ -340,7 +339,7 @@ app.get('/posts', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to retrieve posts",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -367,7 +366,7 @@ app.get('/posts/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: 'Error retrieving post',
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -396,7 +395,7 @@ app.post('/posts', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to create post",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -422,7 +421,7 @@ app.delete('/posts/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to delete post",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
    })
   }
 })
@@ -457,7 +456,7 @@ app.patch('/posts/organizations/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to update post",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
   })
   }
 })
@@ -469,7 +468,7 @@ app.patch('/posts/organizations/finish/:id', async (req, res) => {
     const closed = await prisma.post.findUnique({
       where: { postID: Number(id) }
     })
-    if(!closed.finished)
+    if(!closed?.finished)
     {
       const post = await prisma.post.update({
         where: { postID: Number(id) },
@@ -510,7 +509,7 @@ app.patch('/posts/organizations/finish/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to close post",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
   })
   }
 })
@@ -573,7 +572,7 @@ app.patch('/posts/users/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to register user",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -622,11 +621,12 @@ app.patch('/users/favorites/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Unable to update favorites",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
 
+//Login
 app.post('/users/login', async (req, res) => {
   const {username, password} = req.body;
   try {
@@ -635,7 +635,7 @@ app.post('/users/login', async (req, res) => {
         username: username
       }
     })
-    if(password === user.pswd) {
+    if(password === user?.pswd) {
       res.status(200).json({
         message: "Login accepted"
       })
@@ -649,7 +649,7 @@ app.post('/users/login', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to authenticate, try again",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -666,13 +666,13 @@ app.get('/posts/:id/users', async (req, res) => {
     })
     res.status(200).json({
       message: 'Registrations retrieved successfully',
-      registrations: post.registrations
+      registrations: post?.registrations
     })
   }
   catch (error) {
     res.status(500).json({
       message: "Unable to retrieve registrations",
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     })
   }
 })

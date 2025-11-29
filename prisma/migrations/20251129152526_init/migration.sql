@@ -35,7 +35,7 @@ CREATE TABLE `Organization` (
 -- CreateTable
 CREATE TABLE `Post` (
     `postID` INTEGER NOT NULL AUTO_INCREMENT,
-    `orgID` INTEGER NOT NULL DEFAULT 1,
+    `orgID` INTEGER NOT NULL,
     `eventDate` DATETIME(3) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NOT NULL,
@@ -46,39 +46,38 @@ CREATE TABLE `Post` (
     `thumbnailPath` VARCHAR(191) NULL,
     `finished` BOOLEAN NOT NULL DEFAULT false,
     `updates` VARCHAR(191) NOT NULL DEFAULT '',
+    `volunteersNeeded` INTEGER NOT NULL DEFAULT 0,
 
     PRIMARY KEY (`postID`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `_userFavorites` (
-    `A` INTEGER NOT NULL,
-    `B` INTEGER NOT NULL,
+CREATE TABLE `UserFavorites` (
+    `userID` INTEGER NOT NULL,
+    `orgID` INTEGER NOT NULL,
 
-    UNIQUE INDEX `_userFavorites_AB_unique`(`A`, `B`),
-    INDEX `_userFavorites_B_index`(`B`)
+    PRIMARY KEY (`userID`, `orgID`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `_userRegistrations` (
-    `A` INTEGER NOT NULL,
-    `B` INTEGER NOT NULL,
+CREATE TABLE `UserRegistrations` (
+    `userID` INTEGER NOT NULL,
+    `postID` INTEGER NOT NULL,
 
-    UNIQUE INDEX `_userRegistrations_AB_unique`(`A`, `B`),
-    INDEX `_userRegistrations_B_index`(`B`)
+    PRIMARY KEY (`userID`, `postID`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
 ALTER TABLE `Post` ADD CONSTRAINT `Post_orgID_fkey` FOREIGN KEY (`orgID`) REFERENCES `Organization`(`orgID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `_userFavorites` ADD CONSTRAINT `_userFavorites_A_fkey` FOREIGN KEY (`A`) REFERENCES `Organization`(`orgID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `UserFavorites` ADD CONSTRAINT `UserFavorites_userID_fkey` FOREIGN KEY (`userID`) REFERENCES `User`(`userID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `_userFavorites` ADD CONSTRAINT `_userFavorites_B_fkey` FOREIGN KEY (`B`) REFERENCES `User`(`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `UserFavorites` ADD CONSTRAINT `UserFavorites_orgID_fkey` FOREIGN KEY (`orgID`) REFERENCES `Organization`(`orgID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `_userRegistrations` ADD CONSTRAINT `_userRegistrations_A_fkey` FOREIGN KEY (`A`) REFERENCES `Post`(`postID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `UserRegistrations` ADD CONSTRAINT `UserRegistrations_userID_fkey` FOREIGN KEY (`userID`) REFERENCES `User`(`userID`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `_userRegistrations` ADD CONSTRAINT `_userRegistrations_B_fkey` FOREIGN KEY (`B`) REFERENCES `User`(`userID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `UserRegistrations` ADD CONSTRAINT `UserRegistrations_postID_fkey` FOREIGN KEY (`postID`) REFERENCES `Post`(`postID`) ON DELETE RESTRICT ON UPDATE CASCADE;
