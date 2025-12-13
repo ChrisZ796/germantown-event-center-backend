@@ -677,6 +677,28 @@ app.get('/posts/:id/users', async (req, res) => {
   }
 })
 
+// Get all users and organizations
+app.get('/directory', async (req, res) => {
+  try {
+    const users = await prisma.user.findMany()
+    const organizations = await prisma.organization.findMany()
+    res.status(200).json({
+      message: 'Directory retrieved successfully',
+      users: users,
+      organizations: organizations
+    })
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to retrieve directory list",
+      error: error instanceof Error ? error.message : String(error)
+    })
+  }
+})
+
+
+
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
