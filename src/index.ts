@@ -7,7 +7,7 @@ const port = 8080
 
 
 app.use(express.json())
-app.use(cors())
+app.use(cors({origin:"https://germantown-event-center.vercel.app", methods:["GET", "POST", "PUT", "DELETE", "PATCH"], credentials:true}))
 
 // Create a new user
 app.post('/users', async (req, res) => {
