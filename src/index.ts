@@ -669,7 +669,8 @@ app.post('/users/login', async (req, res) => {
         Id: user.userID,
         username: user.username
       },
-      secret as jwt.Secret
+      secret,
+      { algorithm: 'HS256', expiresIn: '1h'}
     )
 
     res.status(200).json({
