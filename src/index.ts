@@ -118,33 +118,6 @@ app.get('/organizations/search', async (req, res) => {
   }
 })
 
-// Get user info
-app.get('/users/:id', async (req, res) => {
-  const { id } = req.params
-  try {
-    const user = await prisma.user.findUnique({
-      where: { userID: Number(id) },
-      include: {
-        favoriteOrgs: true
-      }
-    })
-    if (user) {
-      res.status(200).json(user)
-    }
-    else {
-      res.status(204).json({
-        message: 'User not found'
-      })
-  }
-  }
-  catch (error) {
-    res.status(500).json({
-      message: "Unable to retrieve user",
-      error: error instanceof Error ? error.message : String(error)
-    })
-  }
-})
-
 //Login
 app.post('/users/login', async (req, res) => {
   const {username, password} = req.body;
@@ -192,6 +165,33 @@ app.post('/users/login', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to authenticate",
+      error: error instanceof Error ? error.message : String(error)
+    })
+  }
+})
+
+// Get user info
+app.get('/users/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const user = await prisma.user.findUnique({
+      where: { userID: Number(id) },
+      include: {
+        favoriteOrgs: true
+      }
+    })
+    if (user) {
+      res.status(200).json(user)
+    }
+    else {
+      res.status(204).json({
+        message: 'User not found'
+      })
+  }
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to retrieve user",
       error: error instanceof Error ? error.message : String(error)
     })
   }
