@@ -3,7 +3,7 @@ import cors from 'cors'
 import { prisma } from '../prisma/lib/prisma'
 import dotenv from 'dotenv'
 import bcrypt from 'bcrypt'
-import { authenticateToken } from './auth' // put AuthenticateToken in handler that need to use auth
+import jwt from 'jsonwebtoken'
 
 const app = express()
 const port = 8080
@@ -13,8 +13,6 @@ app.use(express.json())
 app.use(cors({origin:"https://germantown-event-center.vercel.app", methods:["GET", "POST", "PUT", "DELETE", "PATCH"], credentials:true}))
 
 dotenv.config()
-
-import jwt from 'jsonwebtoken'
 
 // Create a new user
 app.post('/users', async (req, res) => {
@@ -43,6 +41,59 @@ app.post('/users', async (req, res) => {
     })
   }
 
+})
+
+
+//Login
+app.post('/users/login', async (req, res) => {
+  const {username, password} = req.body;
+  try {
+    const user = await prisma.user.findUnique({
+      where:{
+        username: username
+      }
+    })
+    if (!user) {
+      return res.status(401).json({
+        message: "Username not found"
+      })
+    }
+
+    const passwordCheck = await bcrypt.compare(password, user.pswd)
+
+    if (!passwordCheck) {
+      return res.status(401).json({
+        message: "Wrong password"
+      })
+    }
+
+    const secret = process.env.JWT_SECRET
+    if (!secret) {
+      return res.status(500).json({
+        message: "JWT Secret not set up"
+      })
+    }
+
+    const token = jwt.sign(
+      {
+        Id: user.userID,
+        username: user.username
+      },
+      secret,
+      { algorithm: 'HS256', expiresIn: '1h'}
+    )
+
+    res.status(200).json({
+      message: "Login accepted",
+      token: token
+    })
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to authenticate",
+      error: error instanceof Error ? error.message : String(error)
+    })
+  }
 })
 
 // Create a new organization
@@ -629,58 +680,6 @@ app.patch('/users/favorites/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Unable to update favorites",
-      error: error instanceof Error ? error.message : String(error)
-    })
-  }
-})
-
-//Login
-app.post('/users/login', async (req, res) => {
-  const {username, password} = req.body;
-  try {
-    const user = await prisma.user.findUnique({
-      where:{
-        username: username
-      }
-    })
-    if (!user) {
-      return res.status(401).json({
-        message: "Username not found"
-      })
-    }
-
-    const passwordCheck = await bcrypt.compare(password, user.pswd)
-
-    if (!passwordCheck) {
-      return res.status(401).json({
-        message: "Wrong password"
-      })
-    }
-
-    const secret = process.env.JWT_SECRET
-    if (!secret) {
-      return res.status(500).json({
-        message: "JWT Secret not set up"
-      })
-    }
-
-    const token = jwt.sign(
-      {
-        Id: user.userID,
-        username: user.username
-      },
-      secret,
-      { algorithm: 'HS256', expiresIn: '1h'}
-    )
-
-    res.status(200).json({
-      message: "Login accepted",
-      token: token
-    })
-  }
-  catch (error) {
-    res.status(500).json({
-      message: "Unable to authenticate",
       error: error instanceof Error ? error.message : String(error)
     })
   }
