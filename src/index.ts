@@ -3,7 +3,7 @@ import cors from 'cors'
 import { prisma } from '../prisma/lib/prisma'
 import dotenv from 'dotenv'
 import bcrypt from 'bcrypt'
-import { authenticateToken } from './auth'
+import { authenticateToken } from './auth' // put AuthenticateToken in handler that need to use auth
 
 const app = express()
 const port = 8080
