@@ -119,7 +119,7 @@ app.get('/organizations/search', async (req, res) => {
 })
 
 //Login
-app.post('/users/login', async (req, res) => {
+app.post('/users/authenticate/login', async (req, res) => {
   const {username, password} = req.body;
   try {
     const user = await prisma.user.findUnique({
