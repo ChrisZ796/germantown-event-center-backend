@@ -43,59 +43,6 @@ app.post('/users', async (req, res) => {
 
 })
 
-
-//Login
-app.post('/users/login', async (req, res) => {
-  const {username, password} = req.body;
-  try {
-    const user = await prisma.user.findUnique({
-      where:{
-        username: username
-      }
-    })
-    if (!user) {
-      return res.status(401).json({
-        message: "Username not found"
-      })
-    }
-
-    const passwordCheck = await bcrypt.compare(password, user.pswd)
-
-    if (!passwordCheck) {
-      return res.status(401).json({
-        message: "Wrong password"
-      })
-    }
-
-    const secret = process.env.JWT_SECRET
-    if (!secret) {
-      return res.status(500).json({
-        message: "JWT Secret not set up"
-      })
-    }
-
-    const token = jwt.sign(
-      {
-        Id: user.userID,
-        username: user.username
-      },
-      secret,
-      { algorithm: 'HS256', expiresIn: '1h'}
-    )
-
-    res.status(200).json({
-      message: "Login accepted",
-      token: token
-    })
-  }
-  catch (error) {
-    res.status(500).json({
-      message: "Unable to authenticate",
-      error: error instanceof Error ? error.message : String(error)
-    })
-  }
-})
-
 // Create a new organization
 app.post('/organizations', async (req, res) => {
   const { orgName, pswd, email, phoneNumber, address, website, linkedin } = req.body
@@ -193,6 +140,58 @@ app.get('/users/:id', async (req, res) => {
   catch (error) {
     res.status(500).json({
       message: "Unable to retrieve user",
+      error: error instanceof Error ? error.message : String(error)
+    })
+  }
+})
+
+//Login
+app.post('/users/login', async (req, res) => {
+  const {username, password} = req.body;
+  try {
+    const user = await prisma.user.findUnique({
+      where:{
+        username: username
+      }
+    })
+    if (!user) {
+      return res.status(401).json({
+        message: "Username not found"
+      })
+    }
+
+    const passwordCheck = await bcrypt.compare(password, user.pswd)
+
+    if (!passwordCheck) {
+      return res.status(401).json({
+        message: "Wrong password"
+      })
+    }
+
+    const secret = process.env.JWT_SECRET
+    if (!secret) {
+      return res.status(500).json({
+        message: "JWT Secret not set up"
+      })
+    }
+
+    const token = jwt.sign(
+      {
+        Id: user.userID,
+        username: user.username
+      },
+      secret,
+      { algorithm: 'HS256', expiresIn: '1h'}
+    )
+
+    res.status(200).json({
+      message: "Login accepted",
+      token: token
+    })
+  }
+  catch (error) {
+    res.status(500).json({
+      message: "Unable to authenticate",
       error: error instanceof Error ? error.message : String(error)
     })
   }
