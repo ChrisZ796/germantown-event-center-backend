@@ -18,13 +18,13 @@ next();
 dotenv.config()
 
 import usersRouter from './routes/users-routes'
-app.user("/users", usersRouter)
+app.use("/users", usersRouter)
 
 import orgsRouter from './routes/orgs-routes'
-app.user("/orgs", orgsRouter)
+app.use("/orgs", orgsRouter)
 
 import postsRouter from './routes/posts-routes'
-app.user("/posts", postsRouter)
+app.use("/posts", postsRouter)
 
 
 app.get('/directory', async (req, res) => {
