@@ -10,8 +10,7 @@ const port = 8080
 
 
 app.use(express.json())
-//app.use(cors({origin:"https://germantown-event-center.vercel.app", methods:["GET", "POST", "PUT", "DELETE", "PATCH"], credentials:true}))
-app.use(cors({origin:"http://localhost:5173", methods:["GET", "POST", "PUT", "DELETE", "PATCH"], credentials:true}))
+app.use(cors({origin:"https://germantown-event-center.vercel.app", methods:["GET", "POST", "PUT", "DELETE", "PATCH"], credentials:true}))
 app.use((req, res, next) => {
 console.log(`Incoming request: ${req.method} ${req.url}`);
 next();
