@@ -139,4 +139,24 @@ export class OrgsController {
         })
         }
     }
+
+    async searchForOrg(req: express.Request, res: express.Response) {
+        const { query } = req.query;
+        try {
+            const orgResults = await prisma.organization.findMany({
+            where: { 
+                orgName: { contains: query as string} 
+            }
+            })
+            res.status(200).json({
+            message: { orgResults }
+            })
+        }
+        catch (error) {
+            res.status(500).json({
+            message: "Unable to search organizations",
+            error: error instanceof Error ? error.message : String(error)
+        })
+        }
+    }
 }

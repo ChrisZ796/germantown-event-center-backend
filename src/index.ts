@@ -3,13 +3,16 @@ import cors from 'cors'
 import { prisma } from '../prisma/lib/prisma'
 import dotenv from 'dotenv'
 
+import usersRouter from './routes/users-routes'
+import orgsRouter from './routes/orgs-routes'
+import postsRouter from './routes/posts-routes'
 
 const app = express()
 const port = 8080
 
 
 app.use(express.json())
-app.use(cors({origin:"https://germantown-event-center.vercel.app", methods:["GET", "POST", "PUT", "DELETE", "PATCH"], credentials:true}))
+app.use(cors({origin:["https://germantown-event-center.vercel.app", "http://localhost:5173"], methods:["GET", "POST", "PUT", "DELETE", "PATCH"], credentials:true}))
 app.use((req, res, next) => {
 console.log(`Incoming request: ${req.method} ${req.url}`);
 next();
@@ -17,13 +20,8 @@ next();
 
 dotenv.config()
 
-import usersRouter from './routes/users-routes'
 app.use("/users", usersRouter)
-
-import orgsRouter from './routes/orgs-routes'
-app.use("/orgs", orgsRouter)
-
-import postsRouter from './routes/posts-routes'
+app.use("/organizations", orgsRouter)
 app.use("/posts", postsRouter)
 
 

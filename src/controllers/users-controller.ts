@@ -31,7 +31,7 @@ export class UsersController {
         }
     }
 
-    async getUser(req: express.Request, res: express.Response) {
+    async searchForUser(req: express.Request, res: express.Response) {
         const { query } = req.query;
         try {
             const userResults = await prisma.user.findMany({
@@ -195,68 +195,6 @@ export class UsersController {
             message: "Unable to delete user",
             error: error instanceof Error ? error.message : String(error)
         })
-        }
-    }
-
-    async registerUser(req: express.Request, res: express.Response) {
-        const { id } = req.params
-        const { userID } = req.body
-
-        try {
-            const existing = await prisma.userRegistrations.findUnique({
-            where: {
-                userID_postID: {
-                postID: Number(id),
-                userID: Number(userID)
-                }
-            }
-            })
-
-            if (existing) {
-            await prisma.userRegistrations.delete({
-                where: {
-                userID_postID: {
-                    postID: Number(id),
-                    userID: Number(userID)
-                }
-                }
-            })
-            
-            const post = await prisma.post.update({
-                where: { postID: Number(id) },
-                data: { numberInterested: { decrement: 1} }
-            })
-            
-            res.status(200).json({
-                message: 'User unregistered successfully',
-                post
-            })
-            }
-            else {
-            await prisma.userRegistrations.create({
-                data: {
-                userID: Number(userID),
-                postID: Number(id),
-                }
-            })
-            
-            const post = await prisma.post.update({
-                where: { postID: Number(id) },
-                data: { numberInterested: { increment: 1 } }
-            })
-
-            res.status(200).json({
-                message: 'User registered successfully',
-                post
-            })
-            }
-
-        } 
-        catch (error) {
-            res.status(500).json({
-            message: "Unable to register user",
-            error: error instanceof Error ? error.message : String(error)
-            })
         }
     }
 

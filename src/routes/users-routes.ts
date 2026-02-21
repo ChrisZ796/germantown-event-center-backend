@@ -5,13 +5,12 @@ import { UsersController } from '../controllers/users-controller'
 const router = express.Router()
 const usersController = new UsersController()
 
-router.post('/', async(req, res) => usersController.createUser(req, res))
-router.get('/:id/favorites', async(req, res) => usersController.getUserInfo(req, res))
-router.get('/', async(req, res) => usersController.getUser(req, res))
-router.post('/login', async(req, res) => usersController.loginUser(req, res))
-router.patch('/:id', async(req, res) => usersController.updateUser(req, res))
-router.delete('/:id', async(req, res) => usersController.deleteUser(req, res))
-router.patch('/:id/register', async(req, res) => usersController.registerUser(req, res))
-router.patch('/:id/favorites', async(req, res) => usersController.addFavoriteOrg(req, res))
+router.post('/', async(req, res) => await usersController.createUser(req, res))
+router.get('/:id', async(req, res) => await usersController.getUserInfo(req, res))
+router.get('/search/user', async(req, res) => await usersController.searchForUser(req, res))
+router.post('/login', async(req, res) => await usersController.loginUser(req, res))
+router.patch('/:id/info', async(req, res) => await usersController.updateUser(req, res))
+router.delete('/:id', async(req, res) => await usersController.deleteUser(req, res))
+router.patch('/:id/favorites', async(req, res) => await usersController.addFavoriteOrg(req, res))
 
 export default router
