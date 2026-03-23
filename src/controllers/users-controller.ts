@@ -5,8 +5,8 @@ import jwt from 'jsonwebtoken'
 
 export class UsersController {
     async createUser(req: express.Request, res: express.Response) {
-        const { username, pswd, firstname, lastname, email } = req.body
-        const hashed = await bcrypt.hash(pswd, 10)
+        const { username, password, firstname, lastname, email } = req.body
+        const hashed = await bcrypt.hash(password, 10)
         try {
             await prisma.user.create({
             data: {
