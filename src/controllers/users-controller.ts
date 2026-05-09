@@ -2,6 +2,7 @@ import express from 'express'
 import { prisma } from '../../prisma/lib/prisma'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { AuthRequest } from '../types/auth'
 
 export class UsersController {
     async createUser(req: express.Request, res: express.Response) {
@@ -65,13 +66,8 @@ export class UsersController {
                 username: username
             }
             })
-            if (!user) {
-            return res.status(401).json({
-                message: "Username not found"
-            })
-            }
 
-            const passwordCheck = await bcrypt.compare(password, user.pswd)
+            const passwordCheck = user ? await bcrypt.compare(password, user.pswd) : false
 
             if (!passwordCheck) {
             return res.status(401).json({
@@ -86,18 +82,21 @@ export class UsersController {
             })
             }
 
-            const token = jwt.sign(
-            {
-                Id: user.userID,
-                username: user.username
-            },
-            secret,
-            { algorithm: 'HS256', expiresIn: '1h'}
-            )
+            const token = user ? jwt.sign(
+                { userID: user.userID, username: user.username },
+                secret,
+                { algorithm: 'HS256', expiresIn: '1h' }
+            ) : ""
 
-            res.status(200).json({
-            message: "Login accepted",
-            token: token
+            console.log(user)
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: false, // false for local dev  (http). set true for deployment (HTTPS).
+                sameSite: 'lax',
+                maxAge: 60 * 60 * 1000,
+                path: '/',
+            }).status(200).json({
+                message: "Login accepted"
             })
         }
         catch (error) {
@@ -241,6 +240,34 @@ export class UsersController {
         } catch (error) {
             res.status(500).json({
             message: "Unable to update favorites",
+            error: error instanceof Error ? error.message : String(error)
+            })
+        }
+    }
+
+    async getUserFavoriteOrganizations(req: AuthRequest, res: express.Response) {
+        if (!req.user?.userID) {
+            return res.status(401).json({ message: 'Not authenticated' })
+        }
+        try {
+            const user = await prisma.user.findUnique({
+            where: { userID: Number(req.user?.userID) },
+            include: {
+                favoriteOrgs: true
+            }
+            })
+            if (user) {
+                res.status(200).json(user.favoriteOrgs)
+            }
+            else {
+                res.status(204).json({
+                    message: 'User not found'
+                })
+            }
+        }
+        catch (error) {
+            res.status(500).json({
+            message: "Unable to retrieve user",
             error: error instanceof Error ? error.message : String(error)
             })
         }
