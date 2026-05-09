@@ -10,5 +10,5 @@
     "ignoreDeprecations": "6.0",
     "outDir": "dist"
   },
-  "include": ["src/**/*", "prisma/lib"]
+  "include": ["src/**/*", "prisma/lib", "src/types"]
 }

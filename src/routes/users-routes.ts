@@ -1,5 +1,6 @@
 import express from 'express'
 import { UsersController } from '../controllers/users-controller'
+import { authenticateToken } from '../middleware/authenticate'
 
 
 const router = express.Router()
@@ -12,5 +13,6 @@ router.post('/login', async(req, res) => await usersController.loginUser(req, re
 router.patch('/:id/info', async(req, res) => await usersController.updateUser(req, res))
 router.delete('/:id', async(req, res) => await usersController.deleteUser(req, res))
 router.patch('/:id/favorites', async(req, res) => await usersController.addFavoriteOrg(req, res))
+router.get('/favoriteOrgs', authenticateToken, async(req, res) => await usersController.getUserFavoriteOrganizations(req, res))
 
 export default router
