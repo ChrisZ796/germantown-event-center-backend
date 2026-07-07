@@ -32,10 +32,35 @@ export class OrgsController {
         const { id } = req.params
         try {
             const org = await prisma.organization.findUnique({
-            where: { orgID: Number(id) }
+                where: { orgID: Number(id) },
+                include: {
+                    Post: {
+                        select: {
+                            postID: true,
+                            title: true,
+                            eventDate: true
+                        }
+                    }
+                }
             })
+
+            const formattedOrg = {
+                ...org, 
+                Post: org?.Post.map((singlePost) => { return { ...singlePost, 
+                eventDate: singlePost.eventDate.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }) }; }) 
+            }
+
             if (org) {
-            res.status(200).json(org)
+                res.status(200).json({
+                    orgName: formattedOrg.orgName,
+                    description: formattedOrg.description,
+                    email:formattedOrg.email,
+                    address: formattedOrg.address,
+                    website: formattedOrg.website,
+                    linkedin: formattedOrg.linkedin,
+                    post:formattedOrg.Post,
+                    message: 'Organization retrieved successfully'
+                })
             }
             else {
             res.status(204).json({
@@ -73,33 +98,31 @@ export class OrgsController {
 
     async updateOrg(req: express.Request, res: express.Response) {
         const { id } = req.params
-        const { orgName, pswd, email, phoneNumber, address, website, linkedin } = req.body
+        const { orgName, email, phoneNumber, address, website, linkedin, description } = req.body
         try {
             const org = await prisma.organization.update({
             where: { orgID: Number(id) },
             data: { 
                 orgName: orgName,
-                pswd: pswd,
                 email: email,
                 phoneNumber: phoneNumber,
                 address: address,
                 website: website,
-                linkedin: linkedin
+                linkedin: linkedin,
+                description: description
             }
             })
             if (org) {
-            org.orgName = orgName
-            org.pswd = pswd
-            org.email = email
-            org.phoneNumber = phoneNumber
-            org.email = email
-            org.address = address
-            org.website = website
-            org.linkedin = linkedin
-            res.status(200).json({
-                message: 'org updated successfully',
-                org: org
-            })
+                res.status(200).json({
+                    orgName: org.orgName,
+                    description: org.description,
+                    email: org.email,
+                    address: org.address,
+                    website: org.website,
+                    linkedin: org.linkedin,
+                    eventsHosted: [],
+                    message: 'Organization updated successfully'
+                })
             }
             else {
             res.status(204).json({
