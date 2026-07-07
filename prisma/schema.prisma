@@ -38,6 +38,7 @@ model Organization {
   address     String?
   website     String?
   linkedin    String?
+  description String?
   pfpPath     String?
 
   Post Post[]
