@@ -7,6 +7,7 @@ import { AuthRequest } from '../types/auth'
 export class UsersController {
     async createUser(req: express.Request, res: express.Response) {
         const { username, password, firstname, lastname, email } = req.body
+        console.log(req.body)
         const hashed = await bcrypt.hash(password, 10)
         try {
             await prisma.user.create({
@@ -59,6 +60,7 @@ export class UsersController {
     }
 
     async loginUser(req: express.Request, res: express.Response) {
+        console.log("Hello World")
         const {username, password} = req.body;
         try {
             const user = await prisma.user.findUnique({
@@ -66,6 +68,9 @@ export class UsersController {
                 username: username
             }
             })
+
+
+            console.log(user)
 
             const passwordCheck = user ? await bcrypt.compare(password, user.pswd) : false
 
@@ -96,7 +101,8 @@ export class UsersController {
                 maxAge: 60 * 60 * 1000,
                 path: '/',
             }).status(200).json({
-                message: "Login accepted"
+                message: "Login accepted",
+                userID: user?.userID
             })
         }
         catch (error) {
@@ -245,13 +251,13 @@ export class UsersController {
         }
     }
 
-    async getUserFavoriteOrganizations(req: AuthRequest, res: express.Response) {
-        if (!req.user?.userID) {
+    async getUserFavoriteOrganizations(req: express.Request, res: express.Response) {
+        if (!req.body.userID) {
             return res.status(401).json({ message: 'Not authenticated' })
         }
         try {
             const user = await prisma.user.findUnique({
-            where: { userID: Number(req.user?.userID) },
+            where: { userID: Number(req.body.userID) },
             include: {
                 favoriteOrgs: true
             }
